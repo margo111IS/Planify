@@ -15,9 +15,6 @@ namespace Planify.Models
         public DateTime EndDate => StartDate.AddHours(DurationInHours);
         public string? Location { get; set; }
         public bool NeedsReminder { get; set; }
-
-        public bool IsReminderMuted { get; set; } = false;
-
         public bool IsReminderDiscarded { get; set; } = false;
     }
 }

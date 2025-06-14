@@ -1,18 +1,21 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics.Tracing;
+using System.Globalization;
 using System.Text;
 using Planify.Data;
 using Planify.Models;
 
 public class Program
 {
+    static HashSet<int> mutedReminderIds;
     public static void Main(string[] args)
     {
         List<Event> events = EventRepository.LoadEvents();
         Console.WriteLine("\nWelcome to Planify!\n");
+        mutedReminderIds = new HashSet<int>();
 
         while (true)
         {
-            var pendingReminders = events.Where(e => e.NeedsReminder && !e.IsReminderMuted && !e.IsReminderDiscarded && e.StartDate > DateTime.Now && (e.StartDate - DateTime.Now).TotalHours <= 24).ToList();
+            var pendingReminders = events.Where(e => e.NeedsReminder && !mutedReminderIds.Contains(e.Id) && !e.IsReminderDiscarded && e.StartDate > DateTime.Now && (e.StartDate - DateTime.Now).TotalHours <= 24).ToList();
 
             Console.WriteLine("Choose an option: \n1. Add Event\n2. View Events\n3. Clear file\n4. Exit");
             if (pendingReminders.Count > 0)
@@ -54,16 +57,17 @@ public class Program
                 case "4":
                     return;
 
-                // case "View Pending Reminders":
-                // case "5":
-                //     if (pendingReminders.Any())
-                //     {
-                //         ViewReminders(pendingReminders);
-                //     }
-                //     else
-                //     {
-                //         Console.WriteLine("No pending reminders found.\n");
-                //     }
+                case "View Pending Reminders":
+                case "5":
+                    if (pendingReminders.Any())
+                    {
+                        ViewReminders(events, pendingReminders);
+                    }
+                    else
+                    {
+                        Console.WriteLine("No pending reminders found.\n");
+                    }
+                    break;
                 default:
                     Console.WriteLine("Invalid option, please try again.");
                     break;
@@ -74,7 +78,7 @@ public class Program
     public static void AddEvents(List<Event> events)
     {
         //Title
-        string title;
+        string? title;
         while (true)
         {
             Console.WriteLine("\nEnter event title: ");
@@ -162,7 +166,7 @@ public class Program
         }
     }
 
-    public static void ViewReminders(List<Event> pendingReminders)
+    public static void ViewReminders(List<Event> events, List<Event> pendingReminders)
     {
         Console.WriteLine("\n=== Pending Reminders ===\n");
         foreach (var reminder in pendingReminders)
@@ -174,5 +178,48 @@ public class Program
             Console.WriteLine(output.ToString());
             Console.WriteLine();
         }
+
+        Console.Write("Enter ID of a reminder to manage it: ");
+        string? input = Console.ReadLine()?.Trim();
+
+
+        if (int.TryParse(input, out int idToManage) && idToManage >= 1 && idToManage <= events.Count)
+        {
+            ManageReminder(events, events[idToManage - 1]);
+        }
+        else
+        {
+            Console.WriteLine("Invalid ID. Returning to main menu.\n");
+        }
+    }
+
+    public static void ManageReminder(List<Event> events, Event reminder)
+    {
+        Console.WriteLine("\nManage Reminder\n");
+        Console.WriteLine($"Event: {reminder.Title}, Start Date: {reminder.StartDate.ToString("dd/MM/yyyy HH:mm")}\n");
+        Console.WriteLine("Choose an option:");
+        Console.WriteLine("1. Mute Reminder (hidden until restart)\n2. Discard Reminder (will not show again)\n3. Back");
+        Console.Write("Choice: ");
+        string? choice = Console.ReadLine()?.Trim();
+        switch (choice)
+        {
+            case "1":
+                mutedReminderIds.Add(reminder.Id);
+                Console.WriteLine("Reminder muted.");
+                break;
+            case "2":
+                reminder.IsReminderDiscarded = true;
+                Console.WriteLine("Reminder discarded.");
+                break;
+            case "3":
+                return;
+            default:
+                Console.WriteLine("Invalid choice.");
+                return;
+        }
+        EventRepository.AddEvents(events);
+        Console.WriteLine("Reminder status updated successfully!\n");
     }
 }
+
+
