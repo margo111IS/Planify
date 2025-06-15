@@ -3,70 +3,176 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Planify.Data;
 using Planify.Models;
 
 namespace Planify.Services
 {
-    static public class EventService
+    public static class EventService
     {
         public static void AddEvents(List<Event> events)
         {
-            //Title
+            // Title
             string? title;
+            int titleTries = 0;
             while (true)
             {
-                Console.WriteLine("\nEnter event title: ");
-                title = Console.ReadLine()?.Trim();
+                Console.Write("\nEnter event title: ");
+                try
+                {
+                    title = Console.ReadLine()?.Trim();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error reading input: {ex.Message}");
+                    titleTries++;
+                    if (titleTries >= 2)
+                    {
+                        Console.WriteLine("Too many failed attempts. Returning to menu.\n");
+                        return;
+                    }
+                    continue;
+                }
+
                 if (!string.IsNullOrWhiteSpace(title))
                     break;
-                Console.WriteLine("Title cannot be empty. Please enter a valid title: ");
+
+                Console.WriteLine("Title cannot be empty.");
+                titleTries++;
+                if (titleTries >= 2)
+                {
+                    Console.WriteLine("Too many failed attempts. Returning to menu.\n");
+                    return;
+                }
             }
 
-            //Description
-            Console.WriteLine("Enter event description (optional): ");
-            string? description = Console.ReadLine();
+            // Description
+            Console.Write("\nEnter event description (optional): ");
+            string? description = "";
+            try { description = Console.ReadLine(); }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading input: {ex.Message}");
+            }
 
             // Start Date
             DateTime startDate;
+            int dateTries = 0;
             while (true)
             {
-                Console.WriteLine("Enter event start date (yyyy-mm-dd HH:mm): ");
-                var input = Console.ReadLine()?.Trim();
+                Console.Write("\nEnter event start date (yyyy-MM-dd HH:mm): ");
+                string? input;
+                try { input = Console.ReadLine()?.Trim(); }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error reading input: {ex.Message}");
+                    dateTries++;
+                    if (dateTries >= 2)
+                    {
+                        Console.WriteLine("Too many failed attempts. Returning to menu.\n");
+                        return;
+                    }
+                    continue;
+                }
+
                 if (DateTime.TryParseExact(input, "yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out startDate))
                     break;
-                Console.WriteLine("Invalid date format.. Use yyyy-MM-dd HH:mm (e.g., 2025-06-15 14:30).");
+
+                Console.WriteLine("Invalid date format. Use yyyy-MM-dd HH:mm (e.g., 2025-06-15 14:30).");
+                dateTries++;
+                if (dateTries >= 2)
+                {
+                    Console.WriteLine("Too many failed attempts. Returning to menu.\n");
+                    return;
+                }
             }
 
             // Duration
-            Console.WriteLine("Enter event duration (in hours): ");
-            string? durationInput = Console.ReadLine();
+            double durationHours;
+            int durationTries = 0;
+            while (true)
+            {
+                Console.Write("\nEnter event duration (in hours): ");
+                string? durationInput;
+                try { durationInput = Console.ReadLine()?.Trim(); }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error reading input: {ex.Message}");
+                    durationTries++;
+                    if (durationTries >= 2)
+                    {
+                        Console.WriteLine("Too many failed attempts. Returning to menu.\n");
+                        return;
+                    }
+                    continue;
+                }
 
-            if (string.IsNullOrWhiteSpace(durationInput))
-            {
-                Console.WriteLine("Invalid input.");
-                return;
-            }
-            durationInput = durationInput.Replace(',', '.');
-            if (!double.TryParse(durationInput, NumberStyles.Number, CultureInfo.InvariantCulture, out double durationHours) || durationHours <= 0)
-            {
-                Console.WriteLine("Invalid duration.");
-                return;
+                durationInput = durationInput?.Replace(',', '.');
+                if (double.TryParse(durationInput, NumberStyles.Number, CultureInfo.InvariantCulture, out durationHours) && durationHours > 0)
+                    break;
+
+                Console.WriteLine("Invalid duration. Please enter a number greater than 0.");
+                durationTries++;
+                if (durationTries >= 2)
+                {
+                    Console.WriteLine("Too many failed attempts. Returning to menu.\n");
+                    return;
+                }
             }
 
             // Location
-            Console.WriteLine("Enter event location (optional): ");
-            string? location = Console.ReadLine();
+            Console.Write("\nEnter event location (optional): ");
+            string? location = "";
+            try { location = Console.ReadLine(); }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading input: {ex.Message}");
+            }
 
             // Reminder
-            Console.WriteLine("Does the event need a reminder? (yes/no): ");
-            string? reminderInput = Console.ReadLine();
-            bool needsReminder = reminderInput?.Trim().ToLower() == "yes";
+            bool needsReminder;
+            int reminderTries = 0;
+            while (true)
+            {
+                Console.Write("\nDoes the event need a reminder? (yes/no): ");
+                string? reminderInput;
+                try { reminderInput = Console.ReadLine()?.Trim().ToLower(); }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error reading input: {ex.Message}");
+                    reminderTries++;
+                    if (reminderTries >= 2)
+                    {
+                        Console.WriteLine("Too many failed attempts. Returning to menu.\n");
+                        return;
+                    }
+                    continue;
+                }
 
-            //Id
+                if (reminderInput == "yes")
+                {
+                    needsReminder = true;
+                    break;
+                }
+                else if (reminderInput == "no")
+                {
+                    needsReminder = false;
+                    break;
+                }
+
+                Console.WriteLine("Invalid input. Please enter 'yes' or 'no'.");
+                reminderTries++;
+                if (reminderTries >= 2)
+                {
+                    Console.WriteLine("Too many failed attempts. Returning to menu.\n");
+                    return;
+                }
+            }
+
+            // ID generation
             int newId = events.Count > 0 ? events.Max(e => e.Id) + 1 : 1;
 
+            // Create and save
             Event newEvent = new Event
             {
                 Id = newId,
@@ -77,9 +183,10 @@ namespace Planify.Services
                 Location = location,
                 NeedsReminder = needsReminder
             };
+
             events.Add(newEvent);
             EventRepository.AddEvents(events);
-            Console.WriteLine("Event added successfully!\n");
+            Console.WriteLine("\nEvent added successfully!\n");
         }
 
         public static void ViewEvents(List<Event> events)
@@ -94,9 +201,13 @@ namespace Planify.Services
             foreach (var ev in events.OrderBy(e => e.StartDate))
             {
                 StringBuilder output = new StringBuilder();
-                output.Append($"ID: {ev.Id}, Title: {ev.Title}, Start Date: {ev.StartDate.ToString("dd/MM/yyyy HH:mm")}, Duration: {ev.DurationInHours} hours, Needs Reminder: {ev.NeedsReminder}");
-                if (!string.IsNullOrWhiteSpace(ev.Description)) output.Append($", Description: {ev.Description}");
-                if (!string.IsNullOrWhiteSpace(ev.Location)) output.Append($", Location: {ev.Location}");
+                output.Append($"ID: {ev.Id}, Title: {ev.Title}, Start Date: {ev.StartDate:dd/MM/yyyy HH:mm}, Duration: {ev.DurationInHours} hours, Needs Reminder: {ev.NeedsReminder}");
+
+                if (!string.IsNullOrWhiteSpace(ev.Description))
+                    output.Append($", Description: {ev.Description}");
+                if (!string.IsNullOrWhiteSpace(ev.Location))
+                    output.Append($", Location: {ev.Location}");
+
                 Console.WriteLine(output.ToString());
                 Console.WriteLine();
             }
