@@ -87,7 +87,7 @@ namespace Planify.Services
                         selected.IsReminderDiscarded = false; // reset discard if turning on
 
                     EventRepository.AddEvents(events);
-                    Console.WriteLine($"Reminder turned {(selected.NeedsReminder ? "ON" : "OFF")} for '{selected.Title}'.");
+                    Console.WriteLine($"Reminder turned {(selected.NeedsReminder ? "ON" : "OFF")} for '{selected.Title}'.\n");
                 }
                 else
                 {

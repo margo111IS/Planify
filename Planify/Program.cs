@@ -26,17 +26,16 @@ public class Program
                 .ToList();
 
             // Menu display
-            Console.WriteLine("Choose an option:");
+            Console.WriteLine("\nChoose an option:");
             Console.WriteLine("1. Add Event");
             Console.WriteLine("2. View Events");
             Console.WriteLine("3. Clear file");
-            Console.WriteLine("4. Delete event");
-            Console.WriteLine("5. Add reminder to an event");
-            Console.WriteLine("6. Exit");
+            Console.WriteLine("4. Other");
+            Console.WriteLine("5. Exit");
 
             if (pendingReminders.Count > 0)
             {
-                Console.WriteLine("7. View Pending Reminders");
+                Console.WriteLine("6. View Pending Reminders");
                 Console.WriteLine($"\nYou have {pendingReminders.Count} upcoming event(s) that will happen within the next 24 hours.");
             }
 
@@ -95,41 +94,17 @@ public class Program
                         }
                         break;
 
-                    case "Delete event":
+                    case "Other":
                     case "4":
-                        Console.Write("Enter the ID of the event you want to delete: ");
-                        string? deleteInput = null;
-                        try
-                        {
-                            deleteInput = Console.ReadLine()?.Trim();
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Input error: {ex.Message}");
-                            break;
-                        }
-
-                        if (int.TryParse(deleteInput, out int eventId) && events.Any(e => e.Id == eventId))
-                        {
-                            EventService.DeleteEvent(events, eventId);
-                        }
-                        else
-                        {
-                            Console.WriteLine("Invalid ID. Please try again.");
-                        }
-                        break;
-
-                    case "Add reminder to an event":
-                    case "5":
-                        ReminderService.AddReminderToEvent(events);
+                        FeatureService.FeaturesHandler(events);
                         break;
 
                     case "Exit":
-                    case "6":
+                    case "5":
                         return;
 
                     case "View Pending Reminders":
-                    case "7":
+                    case "6":
                         if (pendingReminders.Any())
                         {
                             ReminderService.ViewReminders(events, pendingReminders, mutedReminderIds);
@@ -148,7 +123,6 @@ public class Program
             catch (Exception ex)
             {
                 Console.WriteLine($"An error occurred: {ex.Message}");
-                continue;
             }
         }
     }

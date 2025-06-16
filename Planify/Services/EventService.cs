@@ -227,5 +227,12 @@ namespace Planify.Services
                 Console.WriteLine($"Event with ID {eventId} not found.\n");
             }
         }
+
+        public static void DeleteAllPastEvents(List<Event> events)
+        {
+            int removedEventsCount = events.RemoveAll(e => e.StartDate < DateTime.Now);
+            EventRepository.AddEvents(events);
+            Console.WriteLine(removedEventsCount > 0 ? $"Deleted {removedEventsCount} event(s)." : "No past events found.");
+        }
     }
 }

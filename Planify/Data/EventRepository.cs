@@ -8,7 +8,7 @@ namespace Planify.Data
 {
     public class EventRepository
     {
-        private const string FilePath = "events.json";
+        private const string FilePath = "/Users/margaret/czechitas/Planify/Planify/eventsFile/events.json";
         public static List<Event> LoadEvents()
         {
             if (!File.Exists(FilePath) || new FileInfo(FilePath).Length == 0)
