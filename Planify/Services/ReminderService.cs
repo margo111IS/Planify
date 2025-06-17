@@ -44,25 +44,37 @@ namespace Planify.Services
             Console.WriteLine("Choose an option:");
             Console.WriteLine("1. Mute Reminder (hidden until restart)\n2. Discard Reminder (will not show again)\n3. Back");
             Console.Write("Choice: ");
-            string? choice = Console.ReadLine()?.Trim();
-            switch (choice)
+            string? choice = null;
+            try { choice = Console.ReadLine()?.Trim(); }
+            catch (Exception ex)
             {
-                case "1":
-                    mutedRemindersIds.Add(reminder.Id);
-                    Console.WriteLine("Reminder muted.");
-                    break;
-                case "2":
-                    reminder.IsReminderDiscarded = true;
-                    Console.WriteLine("Reminder discarded.");
-                    break;
-                case "3":
-                    return;
-                default:
-                    Console.WriteLine("Invalid choice.");
-                    return;
+                Console.WriteLine($"Input error: {ex.Message}");
             }
-            EventRepository.AddEvents(events);
-            Console.WriteLine("Reminder status updated successfully!\n");
+            try
+            {
+                switch (choice)
+                {
+                    case "1":
+                        mutedRemindersIds.Add(reminder.Id);
+                        Console.WriteLine("Reminder muted.");
+                        break;
+                    case "2":
+                        reminder.IsReminderDiscarded = true;
+                        Console.WriteLine("Reminder discarded.");
+                        break;
+                    case "3":
+                        return;
+                    default:
+                        Console.WriteLine("Invalid choice.");
+                        return;
+                }
+                EventRepository.AddEvents(events);
+                Console.WriteLine("Reminder status updated successfully!\n");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+            }
         }
 
         public static void AddReminderToEvent(List<Event> events)
@@ -75,28 +87,40 @@ namespace Planify.Services
             }
 
             Console.Write("\nEnter ID of the event to toggle reminder: ");
-            var input = Console.ReadLine();
-
-            if (int.TryParse(input, out int id))
+            string? input = null;
+            try { input = Console.ReadLine(); }
+            catch (Exception ex)
             {
-                var selected = events.FirstOrDefault(e => e.Id == id);
-                if (selected != null)
-                {
-                    selected.NeedsReminder = !selected.NeedsReminder;
-                    if (selected.NeedsReminder)
-                        selected.IsReminderDiscarded = false; // reset discard if turning on
+                Console.WriteLine($"Input error: {ex.Message}");
+            }
 
-                    EventRepository.AddEvents(events);
-                    Console.WriteLine($"Reminder turned {(selected.NeedsReminder ? "ON" : "OFF")} for '{selected.Title}'.\n");
+            try
+            {
+                if (int.TryParse(input, out int id))
+                {
+                    var selected = events.FirstOrDefault(e => e.Id == id);
+                    if (selected != null)
+                    {
+                        selected.NeedsReminder = !selected.NeedsReminder;
+                        if (selected.NeedsReminder)
+                            selected.IsReminderDiscarded = false; // reset discard if turning on
+
+                        EventRepository.AddEvents(events);
+                        Console.WriteLine($"Reminder turned {(selected.NeedsReminder ? "ON" : "OFF")} for '{selected.Title}'.\n");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Event not found.\n");
+                    }
                 }
                 else
                 {
-                    Console.WriteLine("Event not found.\n");
+                    Console.WriteLine("Invalid input.\n");
                 }
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine("Invalid input.\n");
+                Console.WriteLine($"An error occurred: {ex.Message}");
             }
         }
     }

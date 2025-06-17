@@ -10,7 +10,7 @@ public class Program
     public static void Main(string[] args)
     {
         List<Event> events = EventRepository.LoadEvents();
-        Console.WriteLine("\nWelcome to Planify!\n");
+        Console.WriteLine("\nWelcome to Planify!");
         mutedReminderIds = new HashSet<int>();
 
         while (true)
